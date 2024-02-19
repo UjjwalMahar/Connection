@@ -32,7 +32,9 @@ func main() {
 	}
 
 	// buffer to get data
-	received := make([]byte, 2048)
+	bufferSize := 2048
+	
+	received := make([]byte, bufferSize)
 	_, err = conn.Read(received)
 	if err != nil {
 		println("Read data failed:", err.Error())
