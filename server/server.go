@@ -1,34 +1,50 @@
-// Server
 package main
 
 import (
 	"fmt"
+	"log"
 	"net"
+	"os"
+	"time"
 )
 
+const (
+	HOST = "localhost"
+	PORT = "5000"
+	TYPE = "tcp"
+)
 
 func main() {
-
-	
-	// Listen for incoming connections on port 8080
-	listener, err := net.Listen("tcp", "localhost:5000")
+	listen, err := net.Listen(TYPE, HOST+":"+PORT)
 	if err != nil {
-		fmt.Println("Error listening:", err.Error())
-		return
+		log.Fatal(err)
+		os.Exit(1)
 	}
-	defer listener.Close()
+	// close listener
+	defer listen.Close()
+	for {
+		conn, err := listen.Accept()
+		if err != nil {
+			log.Fatal(err)
+			os.Exit(1)
+		}
+		go handleRequest(conn)
+	}
+}
 
-	fmt.Println("Server started. Waiting for connections...")
-
-	// Accept incoming connection
-	conn, err := listener.Accept()
+func handleRequest(conn net.Conn) {
+	// incoming request
+	buffer := make([]byte, 1024)
+	_, err := conn.Read(buffer)
 	if err != nil {
-		fmt.Println("Error accepting connection:", err.Error())
-		return
+		log.Fatal(err)
 	}
+
+	// write data to response
+	time := time.Now().Format(time.ANSIC)
+	responseStr := fmt.Sprintf("Your message is: %v. Received time: %v", string(buffer[:]), time)
+	conn.Write([]byte(responseStr))
+
+	// close conn
 	defer conn.Close()
-
-	fmt.Println("Connection established with", conn.RemoteAddr())
-
-	// Handle connection...
 }

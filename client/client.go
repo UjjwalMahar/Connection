@@ -1,25 +1,45 @@
-// Client
 package main
 
 import (
-	"fmt"
 	"net"
+	"os"
+)
+
+const (
+	HOST = "localhost"
+	PORT = "5000"
+	TYPE = "tcp"
 )
 
 func main() {
-	//data
-	data := []byte("Hello")
-	// Connect to server on port 8080
-	conn, err := net.Dial("tcp", "localhost:5000")
+	tcpServer, err := net.ResolveTCPAddr(TYPE, HOST+":"+PORT)
+
 	if err != nil {
-		fmt.Println("Error connecting:", err.Error())
-		return
+		println("ResolveTCPAddr failed:", err.Error())
+		os.Exit(1)
 	}
-	defer conn.Close()
 
-	fmt.Println("Connected to server.")
+	conn, err := net.DialTCP(TYPE, nil, tcpServer)
+	if err != nil {
+		println("Dial failed:", err.Error())
+		os.Exit(1)
+	}
 
-	//try to write data
-	conn.Write(data)
+	_, err = conn.Write([]byte("Hello"))
+	if err != nil {
+		println("Write data failed:", err.Error())
+		os.Exit(1)
+	}
 
+	// buffer to get data
+	received := make([]byte, 2048)
+	_, err = conn.Read(received)
+	if err != nil {
+		println("Read data failed:", err.Error())
+		os.Exit(1)
+	}
+
+	println("Received message:", string(received))
+
+	conn.Close()
 }
